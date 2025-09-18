@@ -75,6 +75,45 @@ function inicializarApp() {
     configurarFormulario();
     configurarAnimaciones();
     configurarScrollSuave();
+    
+    // Verificar si hay parámetros URL para abrir un terreno específico
+    verificarParametrosURL();
+}
+
+// Función para verificar parámetros URL
+function verificarParametrosURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const terrenoId = urlParams.get('terreno');
+    const productoId = urlParams.get('producto');
+    const comercioId = urlParams.get('comercio');
+    
+    // Si hay un parámetro específico, abrir el modal correspondiente
+    if (terrenoId) {
+        const id = parseInt(terrenoId);
+        const terreno = productos.find(p => p.id === id && p.categoria === 'terrenos');
+        if (terreno) {
+            // Pequeño delay para asegurar que la página esté completamente cargada
+            setTimeout(() => {
+                abrirModal(id);
+            }, 500);
+        }
+    } else if (productoId) {
+        const id = parseInt(productoId);
+        const producto = productos.find(p => p.id === id && p.categoria === 'productos');
+        if (producto) {
+            setTimeout(() => {
+                abrirModal(id);
+            }, 500);
+        }
+    } else if (comercioId) {
+        const id = parseInt(comercioId);
+        const comercio = productos.find(p => p.id === id && p.categoria === 'comercios');
+        if (comercio) {
+            setTimeout(() => {
+                abrirModal(id);
+            }, 500);
+        }
+    }
 }
 
 // Navegación móvil
@@ -391,6 +430,9 @@ function abrirModal(productId) {
     const producto = productos.find(p => p.id === productId);
     if (!producto || !modal) return;
     
+    // Actualizar URL con parámetros
+    actualizarURLConParametros(producto);
+    
     const modalBody = document.getElementById('modal-body');
     
     // Crear galería de imágenes si existen imágenes adicionales
@@ -468,11 +510,15 @@ function abrirModal(productId) {
                     
                     <div style="margin-top: 1.5rem;">
                         <h4 style="color: #2c3e50; margin-bottom: 1rem;">Contacto:</h4>
-                        <div style="display: flex; justify-content: center;">
+                        <div style="display: flex; justify-content: center; gap: 1rem;">
                             <a href="https://wa.me/${producto.contacto.replace(/[^0-9]/g, '')}" 
                                class="btn btn-primary" target="_blank" style="text-align: center; padding: 12px 24px; font-size: 1.1rem;">
                                 <i class="fab fa-whatsapp"></i> WhatsApp
                             </a>
+                            <button onclick="compartirTerreno(${producto.id}, '${producto.categoria}')" 
+                                    class="btn btn-secondary" style="text-align: center; padding: 12px 24px; font-size: 1.1rem; background: #f39c12; border-color: #f39c12;">
+                                <i class="fas fa-share"></i> Compartir
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -491,7 +537,159 @@ function cerrarModal() {
     if (modal) {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
+        
+        // Limpiar parámetros URL al cerrar modal
+        limpiarParametrosURL();
     }
+}
+
+// Función para actualizar URL con parámetros
+function actualizarURLConParametros(producto) {
+    const baseUrl = window.location.origin + window.location.pathname;
+    let parametro = '';
+    
+    switch(producto.categoria) {
+        case 'terrenos':
+            parametro = `terreno=${producto.id}`;
+            break;
+        case 'productos':
+            parametro = `producto=${producto.id}`;
+            break;
+        case 'comercios':
+            parametro = `comercio=${producto.id}`;
+            break;
+    }
+    
+    const nuevaUrl = `${baseUrl}?${parametro}`;
+    
+    // Actualizar URL sin recargar la página
+    window.history.pushState({ productId: producto.id, categoria: producto.categoria }, '', nuevaUrl);
+}
+
+// Función para limpiar parámetros URL
+function limpiarParametrosURL() {
+    const baseUrl = window.location.origin + window.location.pathname;
+    window.history.pushState({}, '', baseUrl);
+}
+
+// Función para compartir terreno/producto
+function compartirTerreno(productId, categoria) {
+    const baseUrl = window.location.origin + window.location.pathname;
+    let parametro = '';
+    
+    switch(categoria) {
+        case 'terrenos':
+            parametro = `terreno=${productId}`;
+            break;
+        case 'productos':
+            parametro = `producto=${productId}`;
+            break;
+        case 'comercios':
+            parametro = `comercio=${productId}`;
+            break;
+    }
+    
+    const urlCompartir = `${baseUrl}?${parametro}`;
+    const producto = productos.find(p => p.id === productId);
+    
+    // Verificar si el navegador soporta la API de compartir nativa
+    if (navigator.share) {
+        navigator.share({
+            title: producto.titulo,
+            text: `Mira este ${getCategoriaTexto(categoria).toLowerCase()}: ${producto.titulo}`,
+            url: urlCompartir
+        }).catch(console.error);
+    } else {
+        // Fallback: copiar al portapapeles
+        copiarAlPortapapeles(urlCompartir, producto.titulo);
+    }
+}
+
+// Función para copiar al portapapeles
+async function copiarAlPortapapeles(url, titulo) {
+    try {
+        await navigator.clipboard.writeText(url);
+        
+        // Mostrar notificación de éxito
+        mostrarNotificacion(`¡Enlace copiado! Puedes pegarlo para compartir: ${titulo}`, 'success');
+    } catch (err) {
+        console.error('Error al copiar:', err);
+        
+        // Fallback manual
+        const textArea = document.createElement('textarea');
+        textArea.value = url;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        mostrarNotificacion(`¡Enlace copiado! Puedes pegarlo para compartir: ${titulo}`, 'success');
+    }
+}
+
+// Función para mostrar notificaciones
+function mostrarNotificacion(mensaje, tipo = 'info') {
+    // Crear elemento de notificación
+    const notificacion = document.createElement('div');
+    notificacion.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${tipo === 'success' ? '#27ae60' : '#3498db'};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        max-width: 300px;
+        font-size: 14px;
+        line-height: 1.4;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    notificacion.innerHTML = `
+        <i class="fas fa-${tipo === 'success' ? 'check-circle' : 'info-circle'}" style="margin-right: 8px;"></i>
+        ${mensaje}
+    `;
+    
+    // Agregar estilos de animación si no existen
+    if (!document.getElementById('notification-styles')) {
+        const styles = document.createElement('style');
+        styles.id = 'notification-styles';
+        styles.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+    
+    document.body.appendChild(notificacion);
+    
+    // Remover automáticamente después de 4 segundos
+    setTimeout(() => {
+        notificacion.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => {
+            if (notificacion.parentNode) {
+                notificacion.parentNode.removeChild(notificacion);
+            }
+        }, 300);
+    }, 4000);
+    
+    // Permitir cerrar haciendo clic
+    notificacion.addEventListener('click', () => {
+        notificacion.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => {
+            if (notificacion.parentNode) {
+                notificacion.parentNode.removeChild(notificacion);
+            }
+        }, 300);
+    });
 }
 
 function cambiarImagenPrincipal(nuevaImagen, elementoClick) {
@@ -645,5 +843,6 @@ window.limpiarFiltros = limpiarFiltros;
 window.abrirModal = abrirModal;
 window.cerrarModal = cerrarModal;
 window.cambiarImagenPrincipal = cambiarImagenPrincipal;
+window.compartirTerreno = compartirTerreno;
 window.agregarProducto = agregarProducto;
 window.eliminarProducto = eliminarProducto;
