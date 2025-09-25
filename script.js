@@ -48,6 +48,34 @@ const productos = [
             "img/Lote Walter Chacras 3.jpeg",
             "img/Lote Walter Chacras 4.jpeg"
         ]
+    },
+    {
+        id: 3,
+        titulo: "Paleta de Pádel Nox AT10 Genius 18K 2023",
+        precio: "$230.000",
+        precioNumerico: 230000,
+        categoria: "productos",
+        descripcion: "Paleta de pádel profesional Nox AT10 Genius 18K 2023. Diseñada para jugadores exigentes que buscan potencia y control. Tecnología de fibra de carbono 18K para máximo rendimiento.",
+        imagen: "img/Paleta_1.jpeg",
+        caracteristicas: ["Fibra carbono 18K", "Forma diamante", "Balance alto", "Algunos detalles de uso"],
+        ubicacion: { lat: -30.953, lng: -64.314 },
+        contacto: "+54 9 385 488-2925",
+        destacado: true,
+        fechaCreacion: new Date('2024-09-25'),
+        detalles: {
+            marca: "Nox",
+            modelo: "AT10 Genius 18K",
+            año: "2023",
+            peso: "365-375 gramos",
+            balance: "Alto (27-28 cm)",
+            forma: "Diamante",
+            nucleo: "HR3 Core",
+            superficie: "Carbon Fiber 18K"
+        },
+        imagenesAdicionales: [
+            "img/Paleta_2.jpeg",
+            "img/Paleta_3.jpeg"
+        ]
     }
 ];
 
@@ -440,11 +468,11 @@ function abrirModal(productId) {
     if (producto.imagenesAdicionales && producto.imagenesAdicionales.length > 0) {
         const todasLasImagenes = [producto.imagen, ...producto.imagenesAdicionales];
         galeriaHTML = `
-            <div style="margin-bottom: 1rem;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem;">
+            <div class="modal-gallery">
+                <div class="modal-gallery-grid">
                     ${todasLasImagenes.map((img, index) => `
                         <img src="${img}" alt="${producto.titulo} - Imagen ${index + 1}" 
-                             style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid ${index === 0 ? '#3498db' : 'transparent'};" 
+                             class="modal-gallery-thumb ${index === 0 ? 'active' : ''}" 
                              onclick="cambiarImagenPrincipal('${img}', this)">
                     `).join('')}
                 </div>
@@ -453,70 +481,66 @@ function abrirModal(productId) {
     }
     
     modalBody.innerHTML = `
-        <div style="padding: 2rem;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-                <div>
+        <div class="modal-responsive-content">
+            <!-- Sección principal con imagen y info básica -->
+            <div class="modal-main-section">
+                <div class="modal-image-section">
                     <img id="imagen-principal" src="${producto.imagen}" alt="${producto.titulo}" 
-                         style="width: 100%; height: 300px; object-fit: cover; border-radius: 10px;">
+                         class="modal-main-image">
                     ${galeriaHTML}
                 </div>
-                <div>
-                    <h2 style="color: #2c3e50; margin-bottom: 1rem;">${producto.titulo}</h2>
-                    <div style="font-size: 1.8rem; color: #27ae60; font-weight: bold; margin-bottom: 1rem;">
-                        ${producto.precio}
-                    </div>
-                    <p style="color: #7f8c8d; margin-bottom: 1.5rem; line-height: 1.6;">
-                        ${producto.descripcion}
-                    </p>
-                    <div style="margin-bottom: 1.5rem;">
-                        <h4 style="color: #2c3e50; margin-bottom: 0.5rem;">Características:</h4>
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <div class="modal-info-section">
+                    <h2 class="modal-title">${producto.titulo}</h2>
+                    <div class="modal-price">${producto.precio}</div>
+                    <p class="modal-description">${producto.descripcion}</p>
+                    <div class="modal-features">
+                        <h4 class="modal-subtitle">Características:</h4>
+                        <div class="modal-features-grid">
                             ${producto.caracteristicas.map(caracteristica => 
-                                `<span style="background: #ecf0f1; color: #2c3e50; padding: 4px 12px; border-radius: 15px; font-size: 0.9rem;">${caracteristica}</span>`
+                                `<span class="modal-feature-tag">${caracteristica}</span>`
                             ).join('')}
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                <div>
-                    <h4 style="color: #2c3e50; margin-bottom: 1rem;">Detalles Técnicos:</h4>
-                    <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px;">
+            <!-- Sección de detalles y ubicación -->
+            <div class="modal-details-section">
+                <div class="modal-technical-details">
+                    <h4 class="modal-subtitle">Detalles Técnicos:</h4>
+                    <div class="modal-details-card">
                         ${Object.entries(producto.detalles)
-                            .filter(([key]) => key !== 'googleMaps') // Excluir googleMaps de los detalles
+                            .filter(([key]) => key !== 'googleMaps')
                             .map(([key, value]) => 
-                            `<div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid #ecf0f1;">
-                                <strong style="color: #2c3e50;">${capitalize(key)}:</strong>
-                                <span style="color: #7f8c8d;">${value}</span>
+                            `<div class="modal-detail-item">
+                                <strong class="modal-detail-label">${capitalize(key)}:</strong>
+                                <span class="modal-detail-value">${value}</span>
                             </div>`
                         ).join('')}
                     </div>
                 </div>
                 
-                <div>
-                    <h4 style="color: #2c3e50; margin-bottom: 1rem;">Ubicación:</h4>
-                    <div id="modal-map" style="width: 100%; height: 200px; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden;" 
-                         onclick="window.open('${producto.detalles.googleMaps}', '_blank')"
-                         onmouseover="this.style.transform='scale(1.05)'"
-                         onmouseout="this.style.transform='scale(1)'">
-                        <div style="text-align: center; z-index: 2;">
-                            <i class="fas fa-map-marker-alt" style="font-size: 2.5rem; margin-bottom: 0.5rem; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.3);"></i>
-                            <p style="margin: 0; font-weight: 600; font-size: 1.1rem;">Ver en Google Maps</p>
-                            <small style="opacity: 0.9;">Haz clic para abrir la ubicación</small>
+                <div class="modal-location-section">
+                    <h4 class="modal-subtitle">Ubicación:</h4>
+                    <div class="modal-map-button" 
+                         onclick="window.open('${producto.detalles.googleMaps}', '_blank')">
+                        <div class="modal-map-content">
+                            <i class="fas fa-map-marker-alt modal-map-icon"></i>
+                            <p class="modal-map-text">Ver en Google Maps</p>
+                            <small class="modal-map-subtext">Haz clic para abrir la ubicación</small>
                         </div>
-                        <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); pointer-events: none;"></div>
+                        <div class="modal-map-overlay"></div>
                     </div>
                     
-                    <div style="margin-top: 1.5rem;">
-                        <h4 style="color: #2c3e50; margin-bottom: 1rem;">Contacto:</h4>
-                        <div style="display: flex; justify-content: center; gap: 1rem;">
+                    <div class="modal-contact-section">
+                        <h4 class="modal-subtitle">Contacto:</h4>
+                        <div class="modal-contact-buttons">
                             <a href="https://wa.me/${producto.contacto.replace(/[^0-9]/g, '')}" 
-                               class="btn btn-primary" target="_blank" style="text-align: center; padding: 12px 24px; font-size: 1.1rem;">
+                               class="btn btn-primary modal-whatsapp-btn" target="_blank">
                                 <i class="fab fa-whatsapp"></i> WhatsApp
                             </a>
                             <button onclick="compartirTerreno(${producto.id}, '${producto.categoria}')" 
-                                    class="btn btn-secondary" style="text-align: center; padding: 12px 24px; font-size: 1.1rem; background: #f39c12; border-color: #f39c12;">
+                                    class="btn btn-secondary modal-share-btn">
                                 <i class="fas fa-share"></i> Compartir
                             </button>
                         </div>
@@ -698,12 +722,12 @@ function cambiarImagenPrincipal(nuevaImagen, elementoClick) {
         imagenPrincipal.src = nuevaImagen;
     }
     
-    // Actualizar bordes de las miniaturas
-    const todasLasMiniaturas = elementoClick.parentNode.querySelectorAll('img');
+    // Actualizar clases activas de las miniaturas
+    const todasLasMiniaturas = elementoClick.parentNode.querySelectorAll('.modal-gallery-thumb');
     todasLasMiniaturas.forEach(img => {
-        img.style.border = '2px solid transparent';
+        img.classList.remove('active');
     });
-    elementoClick.style.border = '2px solid #3498db';
+    elementoClick.classList.add('active');
 }
 
 function capitalize(string) {
@@ -725,7 +749,13 @@ function capitalize(string) {
         'uso': 'Uso del suelo',
         'acceso': 'Acceso',
         'agua': 'Agua',
-        'googleMaps': 'Google Maps'
+        'googleMaps': 'Google Maps',
+        'peso': 'Peso',
+        'balance': 'Balance',
+        'forma': 'Forma',
+        'nucleo': 'Núcleo',
+        'ubicacion': 'Ubicación',
+        'fondo': 'Fondo'
     };
     return palabras[string] || string.charAt(0).toUpperCase() + string.slice(1);
 }
